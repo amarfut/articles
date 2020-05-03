@@ -1,0 +1,550 @@
+<html>
+    <head>
+        <title></title>
+        
+        <style>
+            #article {
+                font-size:19px;
+                width:60%;
+                margin:auto;
+                font-family: Verdana;
+            }
+
+            img{
+                width: 90%;
+            }
+
+            .class-marker {
+                background-color: rgb(151, 151, 151);
+                padding:1px;
+                color:#FFFFFF;
+            }
+
+            .code {
+                font-size: 17px; margin-top:-20px;
+            }
+   
+            .note {
+                background-color: #f0f2f5;
+                border: 1px solid #C0C0C0;
+                padding:10px;
+                border-radius: 5px;
+                color:#575757;
+            }
+
+            .note span:first-child {
+                font-weight: bold;
+                color:#2B91AF;
+            }
+
+            .code {
+                font-family:Consolas;
+                font-size:17px;
+                color:gainsboro;
+                background:#1e1e1e; 
+                padding:15px; 
+                width:90%;
+                border-radius:5px;
+                margin-top:15px;
+            }
+
+        </style>
+    
+    </head>
+    <body>
+
+        <div id="article" style="height:20000px;">
+
+            <h1>Dependency Injection from scratch</h1>
+
+            <p>
+                An object is one of the fundamental concepts of object-oriented programming. 
+                Object encapsulates a set of some data (properties), as well as the behavior (methods) 
+                of the application we are developing. In theory any application can be implemented 
+                within a single method of single object of single class. In case of a console application, 
+                all logic can be placed in the Main method. In case of ASP.NET Core website, all incoming 
+                requests can be processed by <span class="class-marker">Index</span> action of 
+                <span class="class-marker">HomeController</span> class. Therefore, if you decided to 
+                use "Single/God Object Development" Principle, you do not need to 
+                worry about dependency injection at all.
+            </p>
+
+            <p>
+                However, putting all application logic in a single object can work only for very simple cases. 
+                As the number of features growths, the maintainability of your application will tend to zero. 
+            </p>
+
+            <img src="Maintainabiliiy_vs_Lines_of_Code_v1.png" />
+
+            <p>
+                This graph represents the following idea: when your application has 10 lines of code, 
+                it takes almost no time to find some bug or to integrate a new feature into existing code. 
+                However, when application size is 5000 lines of code, coding new feature will take 5% of your time. 
+                The remaining 95% of the time will be spent on integrating new feature into existing mess.
+            </p>
+
+            <p>
+                You can contradict me that OOP beginner will not develop a complex software in such an ugly way. 
+                You will be absolutely right.
+            </p>
+
+            <h4>Single Responsibility Principle</h3>
+
+            <p>
+                We definitely need much more than one class to develop a complex application.
+                Each individual class will encapsulate data and behavior needed to perform one 
+                particular task (Single Responsibility Principle). Instances of such "narrow" 
+                classes will work with each other, making our application live. 
+                Hownother? Pretty simple: one object must create 
+                an instance of another object and, for example, call its method. Let's take a 
+                quick look at a simple code example:
+            </p>
+
+<pre class="code"><span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span style="color:#4ec9b0;">UserReportGenerator</span>
+{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">private</span>&nbsp;<span style="color:#569cd6;">readonly</span>&nbsp;<span style="color:#4ec9b0;">Logger</span>&nbsp;_logger&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span style="color:#4ec9b0;">Logger</span>();
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#4ec9b0;">Report</span>&nbsp;Generate()
+&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_logger<span style="color:#b4b4b4;">.</span>Log(<span style="color:#d69d85;">&quot;Started&quot;</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#57a64a;">//Repor&nbsp;generation&nbsp;logic</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_logger<span style="color:#b4b4b4;">.</span>Log(<span style="color:#d69d85;">&quot;Completed&quot;</span>);
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#b4b4b4;">...</span>
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}
+
+<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span style="color:#4ec9b0;">Logger</span>
+{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">void</span>&nbsp;Log(<span style="color:#569cd6;">string</span>&nbsp;message)
+&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">string</span>&nbsp;logMessage&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span style="color:#d69d85;">$&quot;Message:&nbsp;</span>{&nbsp;message&nbsp;}<span style="color:#d69d85;">,&nbsp;Time:&nbsp;</span>{&nbsp;<span style="color:#86c691;">DateTime</span><span style="color:#b4b4b4;">.</span>Now&nbsp;}<span style="color:#d69d85;">&quot;</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0;">File</span><span style="color:#b4b4b4;">.</span>WriteAllText(<span style="color:#d69d85;">@&quot;C:\app_log.txt&quot;</span>,&nbsp;logMessage);
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}
+</pre>
+
+            <p>Here we have two separate classes. Each class is responsible for the only (almost) task.</p>
+
+            <div class="note">
+                <span>NOTE</span>
+                <p>UserReportGenerator and Logger classes do not follow Single Responsibility Principle 
+                100% percent. Besides their direct responsibilities they both also responsible for 
+                instantiating their dependencies. These “instantiating” responsibilities also have 
+                to be moved out of UserReportGenerator and Logger classes. We will see how to deal 
+                with it later and why it’s super important.</p>
+            </div>
+
+            <p>
+                Class Logger is a low-level component in this small chain. It knows how to create 
+                log messages in appropriate format before saving them into text file. 
+                The high-level component is UserReportGenerator class which knows how to 
+                generate user reports according to some business rules. This separation simplifies 
+                code-redability and allows us to reuse some(!) classes again and again for the new 
+                features in different parts of the system. 
+            </p>
+
+            <p>
+                Our new approach definitely will allow us to develop complex application that even 
+                can be sold to the end users. However, I am afraid that after a while we may experience 
+                serious maintainability problem again. Do you remember the graph Maintainability & Lines of Code? 
+                Here is how updated version with many small classes looks like:
+            </p>
+            <img src="Maintainabiliiy_vs_Lines_of_Code_v2.png" />
+
+            <p>
+                This looks much better, but for some reason the line still goes down despite the better 
+                code design. The reason of that is ...
+             </p>
+
+            <h4>Tight Coupling Problem</h4>
+            
+            As you may already noticed UserReportGenerator class is tightly coupled to Logger class.
+            UserReportGenerator is using the "new" keyword followed by class name to create the instance of Logger. 
+            This is a glue. The relationship between UserReportGenerator and Logger is defined at compile time, 
+            so no flexibility at runtime. UserReportGenerator always has to work only with one concrete 
+            Logger implementation.  
+            You may be wondered why do we might need to break this relationship? 
+            Why this is a problem? There are few reasons to do it:
+
+            <ul>
+                <li>
+                    <b>Improve code reusability.</b> It may not be possible to reuse some class 
+                    in a new context if it is tightly coupled to another class. 
+                    Look at Logger class first. Any other classes in our system can quickly 
+                    reuse Logger as many times as needed. They have just create an instance of Logger and 
+                    call its method. But now imagine that someone else wants to reuse UserRerportGenerator. 
+                    He will also reuse Logger object however he may not need the logging feature at all!
+                </li>
+                <li>
+                    <b>Improve code flexibility.</b> Code cannot be quickly adapted to new requirements 
+                    which are changing regularly. Today it's enough to write logs in a simple text file. 
+                    Tomorrow we will have to write logs in a database. The day after tomorrow? 
+                    Message Broker? Yeap, you can modify Logger class and re-deploy your application. 
+                    But what if there are thousands of classes that already use your Logger. You may spend 
+                    quite a long time just to compile your solution after updating consumers of Logger class. 
+                    And don't forget about the risk of regression defects.
+                </li>
+                <li>
+                    <b>Unit testing.</b> Tightly coupled classes may not be unit testable. 
+                    Logic of Generate method cannot be tested in isolation from the external environment, 
+                    because each run of tests will touch the file system. Test will fail when file 
+                    system errors occur even if report generation logic is perfect.
+                </li>
+            </ul>
+
+            <p>
+                Now we can say with confidence that UserReportGenerator does not have to instantiate its 
+                dependencies. Instead UserReportGenerator can accept dependecies it needs from the outside
+                via constructor. This is a well-known Constructor Injection technique.
+            </p>
+
+<pre class="code"><span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span style="color:#4ec9b0;">UserReportGenerator</span>
+{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">private</span>&nbsp;<span style="color:#569cd6;">readonly</span>&nbsp;<span style="color:#4ec9b0;">Logger</span>&nbsp;_logger;
+ 
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;UserReportGenerator(<span style="color:#4ec9b0;">Logger</span>&nbsp;logger)&nbsp;<span style="color:#b4b4b4;">=&gt;</span>&nbsp;_logger&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;logger;
+}</pre>
+
+            <p>
+                This constructor says its all potential consumers the following: <i>"If you want to instantiate me
+                for your purposes, please provide the instance of Logger."</i>. So the purpose of constructor
+                is not only about simple initializing of instance members. Constructor is the contract that 
+                must be followed by its consumers.   
+            </p>
+
+            <p>
+                But even now none of drawbacks listed above are eliminated. Tight coupling is still in place, 
+                despite the fact that UserReportGenerator is not instantiating its dependency anymore. 
+                UserReportGenerator is still dependent on concrete implementation of Logger. 
+            </p>
+
+            <p>
+                There are two key principles in Object-Oriented Desing which can really help us. 
+                I am talking about Dependency Inversion и Inversion of Control principles.
+            </p>
+
+            <h4>Dependency Inversion</h4>
+            <p>Here is a classic definition of Dependency Inversion Principle:</p>
+            <p>
+                <i>
+                High-level modules should not depend on low-level modules. Both should depend on abstractions (e.g. interfaces). 
+                <br/>    <br/>   
+                Abstractions should not depend on details (concrete implementations). Details should depend on abstractions.
+                </i>
+            </p>
+
+        <p>Let's apply Dependency Inversion Principle to our classes. This is what we get:</p>
+<pre class="code">
+<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span style="color:#4ec9b0;">UserReportGenerator</span>
+{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">private</span>&nbsp;<span style="color:#569cd6;">readonly</span>&nbsp;<span style="color:#b8d7a3;">ILogger</span>&nbsp;_logger;
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;UserReportGenerator(<span style="color:#b8d7a3;">ILogger</span>&nbsp;logger)&nbsp;<span style="color:#b4b4b4;">=&gt;</span>&nbsp;_logger&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;logger;
+}
+ 
+<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">interface</span>&nbsp;<span style="color:#b8d7a3;">ILogger</span>
+{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">void</span>&nbsp;Log(<span style="color:#569cd6;">string</span>&nbsp;message);
+}
+ 
+<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span style="color:#4ec9b0;">Logger</span>&nbsp;:&nbsp;<span style="color:#b8d7a3;">ILogger</span>
+{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#57a64a;">//Implementation</span>
+}</pre>
+
+           <p>
+               We introduced an ILogger abstraction and UserReportGenerator knows only about 
+               that abstraction. No dependency on a concrete implementation anymore. 
+               But please notice that DI Principle only suggests a solution to the 
+               problem but does not suggest the technique to implement it. In other words, 
+               who and how should instantiate Logger instance and inject it into constructor 
+               of UserReportGenerator object? Dependency Inversion Principle does not answer 
+               that questions but Inversion of Control Principles does. 
+           </p>
+
+           <h4>Inversion of Control</h4>
+
+           <p>DEFINITION</p>
+
+           <p>
+             Typically Inversion of Control principle is achieved by using special 
+             frameworks calls IoC containers (Autofac, SimpleInjector, Light Inject...). 
+             They are responsible for instantiating dependencies and injecting them into 
+             appropriate objects. 
+           </p>
+
+<pre class="code"><span style="color:#569cd6;">var</span>&nbsp;builder&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span style="color:#4ec9b0;">ContainerBuilder</span>();
+builder<span style="color:#b4b4b4;">.</span>RegisterType&lt;<span style="color:#4ec9b0;">Logger</span>&gt;()<span style="color:#b4b4b4;">.</span>As&lt;<span style="color:#b8d7a3;">ILogger</span>&gt;();
+</pre>
+
+        <p>
+            So now everything is in right place. Our classes are responsible only for doing their job. 
+            They do not create dependencies they needed anymore. This separate responsibility is moved 
+            to IoC container. 
+        </p>
+
+        <p>
+            Dependency Inversion Principle in conjunction with Inversion of Control makes your system flexible.
+            Our classes can be reused any number of times and there is no need to reuse their hardcoded 
+            dependencies anymore. When there is a new requirement to write logs into the database, 
+            we simply need to provide the UserReportGenerator class with the new implementation of ILogger 
+            interface and make a simple change in Composition Root of our application:
+        </p>
+<pre class="code"><span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span style="color:#4ec9b0;">DatabaseLogger</span>&nbsp;:&nbsp;<span style="color:#b8d7a3;">ILogger</span>
+{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">void</span>&nbsp;Log(<span style="color:#569cd6;">string</span>&nbsp;message)
+&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#57a64a;">//Write&nbsp;log&nbsp;into&nbsp;database</span>
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}
+</pre>
+
+ <pre class="code"><span style="color:#569cd6;">var</span>&nbsp;builder&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span style="color:#4ec9b0;">ContainerBuilder</span>();
+<s>builder<span style="color:#b4b4b4;">.</span>RegisterType&lt;<span style="color:#4ec9b0;">Logger</span>&gt;()<span style="color:#b4b4b4;">.</span>As&lt;<span style="color:#b8d7a3;">ILogger</span>&gt;();</s>
+builder<span style="color:#b4b4b4;">.</span>RegisterType&lt;<span style="color:#4ec9b0;">DatabaseLogger</span>&gt;()<span style="color:#b4b4b4;">.</span>As&lt;<span style="color:#b8d7a3;">ILogger</span>&gt;();
+</pre>
+
+        <p>
+            If we need to unit test UserReportGenerator in isolation from 
+            the external environment it will be enough to simply use Null Object pattern 
+            or to generate a stub by using unit testing frameworks.
+        </p>
+
+        <p>Null Object Pattern in unit test:</p>
+<pre class="code">[<span style="color:#4ec9b0;">Fact</span>]
+<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">void</span>&nbsp;Report_Generated_Successfully()
+{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">var</span>&nbsp;userReportGenerator&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span style="color:#4ec9b0;">UserReportGenerator</span>(<span style="color:#569cd6;">new</span>&nbsp;<span style="color:#4ec9b0;">NullLogger</span>());
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0;">Report</span>&nbsp;report&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;userReportGenerator<span style="color:#b4b4b4;">.</span>Generate();
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0;">Assert</span><span style="color:#b4b4b4;">.</span>True(report<span style="color:#b4b4b4;">.</span>Success);
+}
+</pre>
+
+        <p>Generating a stub in unit test using Moq:</p>
+ 
+ <pre class="code">[<span style="color:#4ec9b0;">Fact</span>]
+<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">void</span>&nbsp;Report_Generated_Successfully()
+{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">var</span>&nbsp;loggerStub&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span style="color:#4ec9b0;">Mock</span>&lt;<span style="color:#b8d7a3;">ILogger</span>&gt;();
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">var</span>&nbsp;urg&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span style="color:#4ec9b0;">UserReportGenerator</span>(loggerStub<span style="color:#b4b4b4;">.</span>Object);
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0;">Report</span>&nbsp;report&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;urg<span style="color:#b4b4b4;">.</span>Generate();
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0;">Assert</span><span style="color:#b4b4b4;">.</span>True(report<span style="color:#b4b4b4;">.</span>Success);
+}
+</pre>
+
+        <p>
+            Dependency Inversion and Inversion of Control principles can ultimately help 
+            us to keep the maintainability of our system in a good shape quite a long time, 
+            potentially forever.
+        </p>
+
+        <img src="Maintainabiliiy_vs_Lines_of_Code_v3.png" />
+        <p>
+            However, when you start injecting everything in everything you can get a very 
+            long list of constructor parameters. This is not as critical problem as tight 
+            coupling but it may be an indicator of issues in your application design.
+        </p>
+
+        <h4>Too many dependencies</h4>
+
+        <p>This is what you may encounter with when using dependency injection:</p>
+
+<pre class="code"><span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span style="color:#4ec9b0;">OrderProcessingService</span>&nbsp;:&nbsp;<span style="color:#b8d7a3;">IOrderProcessingService</span>
+{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;OrderProcessingService(
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#b8d7a3;">IPaymentService</span>&nbsp;paymentService,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#b8d7a3;">IPriceFormatter</span>&nbsp;priceFormatter,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#b8d7a3;">IDiscountService</span>&nbsp;discountService,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#b8d7a3;">ILocalizationService</span>&nbsp;localizationService,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#b8d7a3;">IShoppingCartService</span>&nbsp;shoppingCartService,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#b8d7a3;">IPermissionService</span>&nbsp;permissionService,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#b8d7a3;">IRepository</span>&lt;<span style="color:#4ec9b0;">Order</span>&gt;&nbsp;orderRepository,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#b8d7a3;">IPdfGenerationService</span>&nbsp;pdfGenerationService,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#b8d7a3;">IDateTimeProvider</span>&nbsp;dateTimeProvider)
+&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#57a64a;">//initialization</span>
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#57a64a;">//implementation</span>
+}
+</pre>
+
+        <p>There are two potential problems with such design:</p>
+        <ul>
+            <li>
+                If some class has many dependencies probably it does a lot of things. 
+                Big number of dependencies may signal about violation of single responsibility principle. 
+                And violation of Single Responsibility Principle, in turn, complicates code reusability, debugging, making changes, etc.
+
+            </li>
+            <li>
+                Unit testing can be complicated for such classes because you will have to spend a 
+                lot of time arranging your mock objects. 
+            </li>
+        </ul>
+
+        <p>
+            But I am saying it again: big number of dependencies is not necessary something 
+            that must be refactored once you found it in your source code. This is not a critical 
+            problem itself. It can just signal about potential problems in your code design. 
+            Do these problems really exist? If yes, are these problems worth fighting against them? 
+            If yes, are these problems worth fighting against them right now or you can live with 
+            that and do more important job right now? Investigate your particular case and answer 
+            this chain of questions before starting applying possible refactoring techniques. 
+        </p>
+
+        <h4>Solution #1: Just split your class into smaller onces</h4>
+
+        <p>
+            As mentioned above, constructor over-injection may tell you about violation 
+            of single responsibility principle. Mixing responsibilities within one class 
+            might complicate its maintainability and maintainability of all its consumers.
+        </p>
+        <img src="constructor-over-injection.png" />
+
+        <p style="font-size:27px;">The more responsibilities some a class has the more 1) reasons to change it will have 
+            2) consumer classes will reference it. </p>
+
+        <p>
+            From these rules we can conclude that all our consumers are at risk. 
+            Regression issues are possible everytime we change SRP violator class because consumers rely on it. 
+            And these changes will be frequent because there are a lot of reasons for it. 
+
+            Obvious decision will be to split SRP Violator class into few smaller classes. 
+            Each new class will have less number of dependencies and each consumer will 
+            work with "narrow" classes.
+        </p>
+
+        <img src="constructor-over-injection_after.png" />
+
+        <h4>Solution #2: Ambient Context pattern</h4>
+        <p>
+            Constructor, Method or Property Injection is not the only way for objects to use each other. 
+            Another alternative of injection is a globally accessed static properties in general and 
+            Ambient Context pattern in particular. Ambient Context can be used to provide an access to 
+            cross-cutting dependencies of your application instead injecting them into constructors.
+        </p>
+
+        <div class="note">
+            <span>NOTE</span>
+            <p>cross-cutting concern definition</p>
+        </div>
+
+        <p>
+            Let's get back to OrderProcessingService class and take a quick look at two its 
+            dependencies IDateTimeProvider and ILogger. Both of them are cross-cutting dependencies 
+            for our application because all different layers (Domain, Data Access, Services, Web etc) 
+            might need them. Classes at every layer might need to log something or to get current date 
+            and time information. 
+        </p>
+
+        <p>
+            Classic constructor injection approach for cross-cutting objects will litter hundreds of 
+            constructors with additional parameters. You don’t inject in constructor dependencies 
+            like StringBuilder, Task, Guid or ThreadPoolQueue. So there is no a big need to inject 
+            IDateTimeProvider or ILogger into constructor as well because they are just technical details.  
+        </p>
+
+        <p>Let's implement Ambient Context pattern for ILogger interface only 
+            (implementation for IDateTimeProvider will look the same):</p>
+
+
+<pre class="code"><span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span style="color:#4ec9b0;">LoggerProvider</span>
+{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">static</span>&nbsp;<span style="color:#b8d7a3;">ILogger</span>&nbsp;Instance&nbsp;{&nbsp;<span style="color:#569cd6;">get</span>;&nbsp;<span style="color:#569cd6;">private</span>&nbsp;<span style="color:#569cd6;">set</span>;&nbsp;}&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span style="color:#4ec9b0;">NullLogger</span>();
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">static</span>&nbsp;<span style="color:#569cd6;">void</span>&nbsp;Initialize(<span style="color:#b8d7a3;">ILogger</span>&nbsp;logger)
+&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Instance&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;logger;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}
+
+<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span style="color:#4ec9b0;">Logger</span>&nbsp;:&nbsp;<span style="color:#b8d7a3;">ILogger</span>
+{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">void</span>&nbsp;Log(<span style="color:#569cd6;">string</span>&nbsp;message)
+&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#57a64a;">//TODO:&nbsp;Write&nbsp;to&nbsp;a&nbsp;text&nbsp;file</span>
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}
+
+<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span style="color:#4ec9b0;">NullLogger</span>&nbsp;:&nbsp;<span style="color:#b8d7a3;">ILogger</span>
+{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">void</span>&nbsp;Log(<span style="color:#569cd6;">string</span>&nbsp;message)&nbsp;{&nbsp;}
+}
+</pre>
+
+        <p>
+            Also don't forget to initialize it in composition root of your application 
+            (Main, Startup, OnStartup etc):
+        </p>
+ <pre class="code"><span style="color:#4ec9b0;">LoggerProvider</span><span style="color:#b4b4b4;">.</span>Initialize(<span style="color:#569cd6;">new</span>&nbsp;<span style="color:#4ec9b0;">Logger</span>());
+</pre>
+        <p>Usage:</p>
+
+<pre class="code"><span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span style="color:#4ec9b0;">OrderProcessingService</span>&nbsp;:&nbsp;<span style="color:#b8d7a3;">IOrderProcessingService</span>
+{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;OrderProcessingService(
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#b4b4b4;">...</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<s><span style="color:#b8d7a3;">IDateTimeProvider</span>&nbsp;dateTimeProvider,</s>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#b8d7a3;">ILogger</span>&nbsp;logger)
+&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#57a64a;">//initialization</span>
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">void</span>&nbsp;Process()
+&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0;">LoggerProvider</span><span style="color:#b4b4b4;">.</span>Instance<span style="color:#b4b4b4;">.</span>Log(<span style="color:#d69d85;">&quot;Process&nbsp;started&quot;</span>);
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#57a64a;">//Some&nbsp;Logic&nbsp;&nbsp;&nbsp;&nbsp;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}
+</pre>
+
+
+        <p> Here are key aspects implementation and usage:</p>
+        <ul>
+            <li>Class LoggerProvider has static property Instance of ILogger type. This is what different parts of our application will access to get the instance they need.
+            </li>
+            <li>Method Initialize should be called somewhere in a Composition Root of your application to initialize Instance property with a concrete implementation.
+            </li>
+            <li>By default property Instance is initialized with NullLogger object. This helps to avoid NullReferenceException in case Initialize mistakenly was not called. 
+            </li>
+        </ul>
+
+        <p>
+            Ambient Context can be helpful and convenient to use but from the other hand 
+            it has one drawback. Ambient Context pattern blurs the class contract in which 
+            the pattern is used. When you use Conctructor Injection, it takes you just few 
+            seconds to answer the question: What dependencies does my class have? Just take 
+            a look at constructor and question is answered. However, in case of Ambient Context, 
+            you will have to go thought all the code of a class to answer the same question.
+        </p>
+                
+        <p>Also don't forget that Ambient Context is a global variable which is used by many parts 
+            of your application. So it should be stateless and used as read-only to avoid unexpected 
+            and hard-to-investigate defects. If you feel that you need to have something similar to this:</p>
+
+ <pre class="code"><span style="color:#4ec9b0;">TimeProvider</span><span style="color:#b4b4b4;">.</span>Instance<span style="color:#b4b4b4;">.</span>SomeProperty&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span style="color:#d69d85;">&quot;Some&nbsp;Data&quot;</span>;
+</pre>
+
+
+        <p>most likely you should throw it away and come up with a better design decision.</p>
+
+
+        <h4>Solution #3: Facade design pattern</h4>
+
+        todo
+
+
+
+
+
+
+
+
+
+        </div>
+
+    </body>
+</html>
