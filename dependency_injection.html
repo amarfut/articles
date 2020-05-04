@@ -11,7 +11,7 @@
             }
 
             img{
-                width: 90%;
+               margin-left:30px;
             }
 
             .class-marker {
@@ -20,9 +20,7 @@
                 color:#FFFFFF;
             }
 
-            .code {
-                font-size: 17px; margin-top:-20px;
-            }
+          
    
             .note {
                 background-color: #f0f2f5;
@@ -48,6 +46,34 @@
                 margin-top:15px;
             }
 
+            h2, h3, h4{
+                font-weight: 100;
+            }
+
+            a.navigation{
+                text-decoration: none;
+            }
+
+            a {
+                color:#06568f;
+            }
+
+            a:hover{
+                color: blue;
+            }
+
+            ul.navigation{
+                padding-left: 0;
+            }
+
+            li{
+                padding-top: 5px;
+            }
+
+            ul.navigation,  ul.navigation ul {
+                 list-style-type: none;
+            }
+
         </style>
     
     </head>
@@ -57,6 +83,29 @@
 
             <h1>Dependency Injection from scratch</h1>
 
+            //few words intro
+
+            <ul class="navigation">
+                <li><a href="#god-object-development">Introduction: God-object development</a></li>
+                <li><a href="#single-responsibility-principle">Single Responsibility Principle</a></li>
+                <li><a href="#tight-coupling">Tight Coupling Problem</a></li>
+                <li><a href="#di-ioc">Dependency Inversion & Inversion of Control</a></li>
+                <li>
+                    <a href="#too-many-dependencies">Too many dependencies</a>
+                    <ul>
+                        <li><a href="#solution-1">Solution #1: Just split your class into smaller onces</a></li>
+                        <li><a href="#solution-2">Solution #2: Ambient Context pattern</a></li>
+                        <li><a href="#solution-3">Solution #3: Facade design pattern</a></li>
+                    </ul>
+                </li>
+                <li><a href="#di-patterns">Dependency Injection Patterns</a></li>
+                <li><a href="#acyclic-dependencies">Acyclic dependencies</a></li>
+                <li><a href="#conclusion">Conclusion</a></li>
+            </ul>
+
+
+            <a name="god-object-development"></a>
+            <h2>Introduction: God-object development</h3>
             <p>
                 An object is one of the fundamental concepts of object-oriented programming. 
                 Object encapsulates a set of some data (properties), as well as the behavior (methods) 
@@ -65,8 +114,8 @@
                 all logic can be placed in the Main method. In case of ASP.NET Core website, all incoming 
                 requests can be processed by <span class="class-marker">Index</span> action of 
                 <span class="class-marker">HomeController</span> class. Therefore, if you decided to 
-                use "Single/God Object Development" Principle, you do not need to 
-                worry about dependency injection at all.
+                use <a href="https://en.wikipedia.org/wiki/God_object" target="_blank">God Object Pattern</a>, 
+                you do not need to worry about dependency injection at all.
             </p>
 
             <p>
@@ -78,25 +127,27 @@
 
             <p>
                 This graph represents the following idea: when your application has 10 lines of code, 
-                it takes almost no time to find some bug or to integrate a new feature into existing code. 
-                However, when application size is 5000 lines of code, coding new feature will take 5% of your time. 
+                it takes you almost no time to find some bug or to integrate a new feature into existing code. 
+                However, when application has 10000 lines of code, coding new feature will take 5% of your time. 
                 The remaining 95% of the time will be spent on integrating new feature into existing mess.
             </p>
 
             <p>
-                You can contradict me that OOP beginner will not develop a complex software in such an ugly way. 
+                You can contradict me that even OOP beginner will not develop a software in such an ugly way. 
                 You will be absolutely right.
             </p>
 
-            <h4>Single Responsibility Principle</h3>
+            <a name="single-responsibility-principle"></a>
+            <h2>Single Responsibility Principle</h2>
 
             <p>
                 We definitely need much more than one class to develop a complex application.
                 Each individual class will encapsulate data and behavior needed to perform one 
-                particular task (Single Responsibility Principle). Instances of such "narrow" 
+                particular task (<a href="https://en.wikipedia.org/wiki/Single-responsibility_principle" target="_blank">Single Responsibility Principle</a>). 
+                Objects of such "narrow" 
                 classes will work with each other, making our application live. 
-                Hownother? Pretty simple: one object must create 
-                an instance of another object and, for example, call its method. Let's take a 
+                How exactly some object can use another one? Pretty simple: one object must create 
+                an object of another class and, for example, call its method. Let's take a 
                 quick look at a simple code example:
             </p>
 
@@ -128,11 +179,12 @@
 
             <div class="note">
                 <span>NOTE</span>
-                <p>UserReportGenerator and Logger classes do not follow Single Responsibility Principle 
-                100% percent. Besides their direct responsibilities they both also responsible for 
-                instantiating their dependencies. These “instantiating” responsibilities also have 
-                to be moved out of UserReportGenerator and Logger classes. We will see how to deal 
-                with it later and why it’s super important.</p>
+                <p>UserReportGenerator does not follow Single Responsibility Principle 
+                100% percent. In addition to direct responsibility (generating user report), 
+                UserReportGenerator is also responsible for creating its dependencies.
+                This "instantiating" responsibility also has to be moved out of UserReportGenerator class.
+                We will see how to deal with it later and why it's super important.
+            </p>
             </div>
 
             <p>
@@ -140,12 +192,12 @@
                 log messages in appropriate format before saving them into text file. 
                 The high-level component is UserReportGenerator class which knows how to 
                 generate user reports according to some business rules. This separation simplifies 
-                code-redability and allows us to reuse some(!) classes again and again for the new 
+                code-readability and allows us to reuse some(!) classes again and again for the new 
                 features in different parts of the system. 
             </p>
 
             <p>
-                Our new approach definitely will allow us to develop complex application that even 
+                Our new approach will definitely allow us to develop complex application that even 
                 can be sold to the end users. However, I am afraid that after a while we may experience 
                 serious maintainability problem again. Do you remember the graph Maintainability & Lines of Code? 
                 Here is how updated version with many small classes looks like:
@@ -157,7 +209,8 @@
                 code design. The reason of that is ...
              </p>
 
-            <h4>Tight Coupling Problem</h4>
+             <a name="tight-coupling"></a>
+            <h2>Tight Coupling Problem</h2>
             
             As you may already noticed UserReportGenerator class is tightly coupled to Logger class.
             UserReportGenerator is using the "new" keyword followed by class name to create the instance of Logger. 
@@ -224,7 +277,8 @@
                 I am talking about Dependency Inversion и Inversion of Control principles.
             </p>
 
-            <h4>Dependency Inversion</h4>
+            <a name="di-ioc"></a>
+            <h2>Dependency Inversion & Inversion of Control</h2>
             <p>Here is a classic definition of Dependency Inversion Principle:</p>
             <p>
                 <i>
@@ -263,7 +317,7 @@
                that questions but Inversion of Control Principles does. 
            </p>
 
-           <h4>Inversion of Control</h4>
+           <h3>Inversion of Control</h3>
 
            <p>DEFINITION</p>
 
@@ -346,7 +400,8 @@ builder<span style="color:#b4b4b4;">.</span>RegisterType&lt;<span style="color:#
             coupling but it may be an indicator of issues in your application design.
         </p>
 
-        <h4>Too many dependencies</h4>
+        <a name="too-many-dependencies"></a>
+        <h2>Too many dependencies</h2>
 
         <p>This is what you may encounter with when using dependency injection:</p>
 
@@ -394,7 +449,8 @@ builder<span style="color:#b4b4b4;">.</span>RegisterType&lt;<span style="color:#
             this chain of questions before starting applying possible refactoring techniques. 
         </p>
 
-        <h4>Solution #1: Just split your class into smaller onces</h4>
+        <a name="solution-1"></a>
+        <h3>Solution #1: Just split your class into smaller onces</h3>
 
         <p>
             As mentioned above, constructor over-injection may tell you about violation 
@@ -418,7 +474,8 @@ builder<span style="color:#b4b4b4;">.</span>RegisterType&lt;<span style="color:#
 
         <img src="constructor-over-injection_after.png" />
 
-        <h4>Solution #2: Ambient Context pattern</h4>
+        <a name="solution-2"></a>
+        <h3>Solution #2: Ambient Context pattern</h3>
         <p>
             Constructor, Method or Property Injection is not the only way for objects to use each other. 
             Another alternative of injection is a globally accessed static properties in general and 
@@ -531,16 +588,26 @@ builder<span style="color:#b4b4b4;">.</span>RegisterType&lt;<span style="color:#
 
         <p>most likely you should throw it away and come up with a better design decision.</p>
 
-
-        <h4>Solution #3: Facade design pattern</h4>
+        <a name="solution-3"></a>
+        <h3>Solution #3: Facade design pattern</h3>
 
         todo
 
 
+        <a name="di-patterns"></a>
+        <h3>Dependency Injection Patterns</h3>
 
+        todo
 
+        <a name="acyclic-dependencies"></a>
+        <h3>Acyclic Dependencies</h3>
+        
+        todo
 
+        <a name="conclusion">Conclusion</a>
+        <h3>Conclusion</h3>
 
+        todo
 
 
 
