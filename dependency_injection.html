@@ -15,9 +15,9 @@
             }
 
             .class-marker {
-                background-color: rgb(151, 151, 151);
-                padding:1px;
-                color:#FFFFFF;
+                 background-color:#ededed;
+                 padding:2px;
+                 color:#5f7494;
             }
 
           
@@ -74,6 +74,13 @@
                  list-style-type: none;
             }
 
+            .cite{
+                font-size:21px; 
+                padding:20px; 
+                color:#7d7c79;
+                font-style: italic;
+            }
+
         </style>
     
     </head>
@@ -93,7 +100,7 @@
                 <li>
                     <a href="#too-many-dependencies">Too many dependencies</a>
                     <ul>
-                        <li><a href="#solution-1">Solution #1: Just split your class into smaller onces</a></li>
+                        <li><a href="#solution-1">Solution #1: Refactoring towards Single Responsibility</a></li>
                         <li><a href="#solution-2">Solution #2: Ambient Context pattern</a></li>
                         <li><a href="#solution-3">Solution #3: Facade design pattern</a></li>
                     </ul>
@@ -129,7 +136,8 @@
                 This graph represents the following idea: when your application has 10 lines of code, 
                 it takes you almost no time to find some bug or to integrate a new feature into existing code. 
                 However, when application has 10000 lines of code, coding new feature will take 5% of your time. 
-                The remaining 95% of the time will be spent on integrating new feature into existing mess.
+                The remaining 95% of the time will be spent on integrating new feature into existing mess
+                (these numbers are not super accurate).
             </p>
 
             <p>
@@ -188,9 +196,9 @@
             </div>
 
             <p>
-                Class Logger is a low-level component in this small chain. It knows how to create 
+                Class <span class="class-marker">Logger</span> is a low-level component in this small chain. It knows how to create 
                 log messages in appropriate format before saving them into text file. 
-                The high-level component is UserReportGenerator class which knows how to 
+                The high-level component is <span class="class-marker">UserReportGenerator</span> class which knows how to 
                 generate user reports according to some business rules. This separation simplifies 
                 code-readability and allows us to reuse some(!) classes again and again for the new 
                 features in different parts of the system. 
@@ -212,11 +220,11 @@
              <a name="tight-coupling"></a>
             <h2>Tight Coupling Problem</h2>
             
-            As you may already noticed UserReportGenerator class is tightly coupled to Logger class.
-            UserReportGenerator is using the "new" keyword followed by class name to create the instance of Logger. 
-            This is a glue. The relationship between UserReportGenerator and Logger is defined at compile time, 
-            so no flexibility at runtime. UserReportGenerator always has to work only with one concrete 
-            Logger implementation.  
+            As you may already noticed <span class="class-marker">UserReportGenerator</span> class is tightly coupled to <span class="class-marker">Logger</span> class,
+            because it is using the "new" keyword followed by class name to create the instance of <span class="class-marker">Logger</span>. 
+            This is a glue. The relationship between two classes is defined at compile time, 
+            so no flexibility at runtime. <span class="class-marker">UserReportGenerator</span> always has to work only with one concrete 
+            <span class="class-marker">Logger</span> implementation.  
             You may be wondered why do we might need to break this relationship? 
             Why this is a problem? There are few reasons to do it:
 
@@ -224,32 +232,32 @@
                 <li>
                     <b>Improve code reusability.</b> It may not be possible to reuse some class 
                     in a new context if it is tightly coupled to another class. 
-                    Look at Logger class first. Any other classes in our system can quickly 
-                    reuse Logger as many times as needed. They have just create an instance of Logger and 
-                    call its method. But now imagine that someone else wants to reuse UserRerportGenerator. 
-                    He will also reuse Logger object however he may not need the logging feature at all!
+                    Look at <span class="class-marker">Logger</span> class first. Any other classes in our system can quickly 
+                    reuse logging feature as many times as needed. They have just create an instance of <span class="class-marker">Logger</span> and 
+                    call its method. But now imagine that someone else wants to reuse <span class="class-marker">UserRerportGenerator</span>. 
+                    He will also reuse <span class="class-marker">Logger</span> object however he may not need the logging feature at all!
                 </li>
                 <li>
                     <b>Improve code flexibility.</b> Code cannot be quickly adapted to new requirements 
                     which are changing regularly. Today it's enough to write logs in a simple text file. 
                     Tomorrow we will have to write logs in a database. The day after tomorrow? 
-                    Message Broker? Yeap, you can modify Logger class and re-deploy your application. 
-                    But what if there are thousands of classes that already use your Logger. You may spend 
-                    quite a long time just to compile your solution after updating consumers of Logger class. 
+                    Message Broker? Yeap, you can modify <span class="class-marker">Logger</span> class and re-deploy your application. 
+                    But what if there are thousands of classes that already use your <span class="class-marker">Logger</span>. You may spend 
+                    quite a long time just to compile your solution trying to update consumers of <span class="class-marker">Logger</span> class. 
                     And don't forget about the risk of regression defects.
                 </li>
                 <li>
                     <b>Unit testing.</b> Tightly coupled classes may not be unit testable. 
-                    Logic of Generate method cannot be tested in isolation from the external environment, 
-                    because each run of tests will touch the file system. Test will fail when file 
+                    Logic of <span class="class-marker">Generate</span> method cannot be tested in isolation from the external environment, 
+                    because each run of such tests will touch the file system. Tests will fail when file 
                     system errors occur even if report generation logic is perfect.
                 </li>
             </ul>
 
             <p>
-                Now we can say with confidence that UserReportGenerator does not have to instantiate its 
-                dependencies. Instead UserReportGenerator can accept dependecies it needs from the outside
-                via constructor. This is a well-known Constructor Injection technique.
+                Now we can say with confidence that <span class="class-marker">UserReportGenerator</span> does not have to instantiate its 
+                dependencies. Instead <span class="class-marker">UserReportGenerator</span> can accept dependecies it needs from the outside
+                via constructor. This is a well-known <a href="https://en.wikipedia.org/wiki/Dependency_injection#Constructor_injection" target="_blank">Constructor Injection</a> technique.
             </p>
 
 <pre class="code"><span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span style="color:#4ec9b0;">UserReportGenerator</span>
@@ -260,15 +268,15 @@
 }</pre>
 
             <p>
-                This constructor says its all potential consumers the following: <i>"If you want to instantiate me
-                for your purposes, please provide the instance of Logger."</i>. So the purpose of constructor
-                is not only about simple initializing of instance members. Constructor is the contract that 
-                must be followed by its consumers.   
+                This constructor says all of its potential consumers the following: <i>"If you want to instantiate me
+                for your purposes, please provide the instance of Logger."</i>. So the purpose of the constructor
+                is not only about simple initializing of instance members. <b>Constructor is the class contract</b> that 
+                must be followed by all its consumers.   
             </p>
 
             <p>
                 But even now none of drawbacks listed above are eliminated. Tight coupling is still in place, 
-                despite the fact that UserReportGenerator is not instantiating its dependency anymore. 
+                despite the fact that UserReportGenerator is not instantiating dependency anymore. 
                 UserReportGenerator is still dependent on concrete implementation of Logger. 
             </p>
 
@@ -280,12 +288,12 @@
             <a name="di-ioc"></a>
             <h2>Dependency Inversion & Inversion of Control</h2>
             <p>Here is a classic definition of Dependency Inversion Principle:</p>
-            <p>
-                <i>
-                High-level modules should not depend on low-level modules. Both should depend on abstractions (e.g. interfaces). 
+            <p class="cite">
+               
+                "High-level modules should not depend on low-level modules. Both should depend on abstractions (e.g. interfaces). 
                 <br/>    <br/>   
-                Abstractions should not depend on details (concrete implementations). Details should depend on abstractions.
-                </i>
+                Abstractions should not depend on details (concrete implementations). Details should depend on abstractions."
+             
             </p>
 
         <p>Let's apply Dependency Inversion Principle to our classes. This is what we get:</p>
@@ -308,18 +316,27 @@
 }</pre>
 
            <p>
-               We introduced an ILogger abstraction and UserReportGenerator knows only about 
+               We've introduced <span class="class-marker">ILogger</span> abstraction, and 
+               <span class="class-marker">UserReportGenerator</span> 
+               knows only about 
                that abstraction. No dependency on a concrete implementation anymore. 
                But please notice that DI Principle only suggests a solution to the 
                problem but does not suggest the technique to implement it. In other words, 
-               who and how should instantiate Logger instance and inject it into constructor 
-               of UserReportGenerator object? Dependency Inversion Principle does not answer 
-               that questions but Inversion of Control Principles does. 
+               who and how should instantiate <span class="class-marker">Logger</span> instance and inject 
+               it into constructor 
+               of <span class="class-marker">UserReportGenerator</span> object? Dependency Inversion Principle does not answer 
+               that questions but Inversion of Control Principle does. 
            </p>
 
-           <h3>Inversion of Control</h3>
+           <h3>Inversion of Control Principle</h3>
 
-           <p>DEFINITION</p>
+           IoC is not about DI only. DI is a subset of IoC. Here is the IoC definition:
+           <p class="cite">
+            "Any sort of programming style where an overall framework or runtime controlled the program flow."
+           </p>
+
+            For DI, IoC means that objects do not have to decide which dependencies they need. 
+            This decision making must be delegated to a separate component.
 
            <p>
              Typically Inversion of Control principle is achieved by using special 
@@ -334,16 +351,17 @@ builder<span style="color:#b4b4b4;">.</span>RegisterType&lt;<span style="color:#
 
         <p>
             So now everything is in right place. Our classes are responsible only for doing their job. 
-            They do not create dependencies they needed anymore. This separate responsibility is moved 
-            to IoC container. 
+            They do not create dependencies they need anymore. 
         </p>
 
         <p>
             Dependency Inversion Principle in conjunction with Inversion of Control makes your system flexible.
             Our classes can be reused any number of times and there is no need to reuse their hardcoded 
             dependencies anymore. When there is a new requirement to write logs into the database, 
-            we simply need to provide the UserReportGenerator class with the new implementation of ILogger 
-            interface and make a simple change in Composition Root of our application:
+            we simply need to provide the <span class="class-marker">UserReportGenerator</span> class with the 
+            new implementation of <span class="class-marker">ILogger</span> interface. 
+            To do that, one simple change has to be made in a 
+            Composition Root of our application:
         </p>
 <pre class="code"><span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span style="color:#4ec9b0;">DatabaseLogger</span>&nbsp;:&nbsp;<span style="color:#b8d7a3;">ILogger</span>
 {
@@ -360,9 +378,9 @@ builder<span style="color:#b4b4b4;">.</span>RegisterType&lt;<span style="color:#
 </pre>
 
         <p>
-            If we need to unit test UserReportGenerator in isolation from 
-            the external environment it will be enough to simply use Null Object pattern 
-            or to generate a stub by using unit testing frameworks.
+            If we need to unit test <span class="class-marker">UserReportGenerator</span> in isolation from 
+            the external environment, it will be enough to use Null Object pattern 
+            or to generate a stub.
         </p>
 
         <p>Null Object Pattern in unit test:</p>
@@ -397,13 +415,13 @@ builder<span style="color:#b4b4b4;">.</span>RegisterType&lt;<span style="color:#
         <p>
             However, when you start injecting everything in everything you can get a very 
             long list of constructor parameters. This is not as critical problem as tight 
-            coupling but it may be an indicator of issues in your application design.
+            coupling but still this is a smell that deserves an investigation.
         </p>
 
         <a name="too-many-dependencies"></a>
         <h2>Too many dependencies</h2>
 
-        <p>This is what you may encounter with when using dependency injection:</p>
+        <p>This is what you may encounter with when using constructor injection pattern:</p>
 
 <pre class="code"><span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span style="color:#4ec9b0;">OrderProcessingService</span>&nbsp;:&nbsp;<span style="color:#b8d7a3;">IOrderProcessingService</span>
 {
@@ -435,12 +453,12 @@ builder<span style="color:#b4b4b4;">.</span>RegisterType&lt;<span style="color:#
             </li>
             <li>
                 Unit testing can be complicated for such classes because you will have to spend a 
-                lot of time arranging your mock objects. 
+                lot of time arranging your mock objects for all dependencies. 
             </li>
         </ul>
 
         <p>
-            But I am saying it again: big number of dependencies is not necessary something 
+            But remember: big number of dependencies is not necessary something 
             that must be refactored once you found it in your source code. This is not a critical 
             problem itself. It can just signal about potential problems in your code design. 
             Do these problems really exist? If yes, are these problems worth fighting against them? 
@@ -450,21 +468,21 @@ builder<span style="color:#b4b4b4;">.</span>RegisterType&lt;<span style="color:#
         </p>
 
         <a name="solution-1"></a>
-        <h3>Solution #1: Just split your class into smaller onces</h3>
+        <h3>Solution #1: Refactoring towards Single Responsibility</h3>
 
         <p>
             As mentioned above, constructor over-injection may tell you about violation 
             of single responsibility principle. Mixing responsibilities within one class 
-            might complicate its maintainability and maintainability of all its consumers.
+            may complicate its maintainability and maintainability of all its consumers.
         </p>
         <img src="constructor-over-injection.png" />
 
-        <p style="font-size:27px;">The more responsibilities some a class has the more 1) reasons to change it will have 
-            2) consumer classes will reference it. </p>
+        <p style="font-size:27px;">The more responsibilities some class has the more 1) reasons to change it has 
+            2) consumer classes reference it. </p>
 
         <p>
             From these rules we can conclude that all our consumers are at risk. 
-            Regression issues are possible everytime we change SRP violator class because consumers rely on it. 
+            Regression issues are possible everytime we change SRP violator class. 
             And these changes will be frequent because there are a lot of reasons for it. 
 
             Obvious decision will be to split SRP Violator class into few smaller classes. 
@@ -474,13 +492,18 @@ builder<span style="color:#b4b4b4;">.</span>RegisterType&lt;<span style="color:#
 
         <img src="constructor-over-injection_after.png" />
 
+        <p style="color:red;">
+            END
+        </p>
+
         <a name="solution-2"></a>
         <h3>Solution #2: Ambient Context pattern</h3>
         <p>
             Constructor, Method or Property Injection is not the only way for objects to use each other. 
             Another alternative of injection is a globally accessed static properties in general and 
-            Ambient Context pattern in particular. Ambient Context can be used to provide an access to 
-            cross-cutting dependencies of your application instead injecting them into constructors.
+            Ambient Context pattern in particular. 
+            The pattern is not a replacement of Constructor Injection. Ambient Context can work good only 
+            for cross-cutting dependencies of your application.
         </p>
 
         <div class="note">
@@ -591,21 +614,23 @@ builder<span style="color:#b4b4b4;">.</span>RegisterType&lt;<span style="color:#
         <a name="solution-3"></a>
         <h3>Solution #3: Facade design pattern</h3>
 
-        todo
+        <p>Analyzing a long list of constructor parameters of one or multiple 
+        classes, you can spot so called <b>Leaky Abstraction</b> problem.</p> 
 
+        <img src="facade-design-pattern.png"/>
 
         <a name="di-patterns"></a>
-        <h3>Dependency Injection Patterns</h3>
+        <h2>Dependency Injection Patterns</h2>
 
         todo
 
         <a name="acyclic-dependencies"></a>
-        <h3>Acyclic Dependencies</h3>
+        <h2>Acyclic Dependencies</h2>
         
         todo
 
         <a name="conclusion">Conclusion</a>
-        <h3>Conclusion</h3>
+        <h2>Conclusion</h2>
 
         todo
 
