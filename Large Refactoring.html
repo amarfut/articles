@@ -1,0 +1,147 @@
+<html>
+    <head>
+        <title></title>
+        
+        <style>
+            #article {
+                font-size:19px;
+                width:60%;
+                margin:auto;
+                font-family: Verdana;
+            }
+
+            img{
+               margin-left:30px;
+            }
+
+            .class-marker {
+                 background-color:#ededed;
+                 padding:2px;
+                 color:#5f7494;
+            }
+
+          
+   
+            .note {
+                background-color: #f0f2f5;
+                border: 1px solid #C0C0C0;
+                padding:10px;
+                border-radius: 5px;
+                color:#575757;
+            }
+
+            .note span:first-child {
+                font-weight: bold;
+                color:#2B91AF;
+            }
+
+            .code {
+                font-family:Consolas;
+                font-size:17px;
+                color:gainsboro;
+                background:#1e1e1e; 
+                padding:15px; 
+                width:90%;
+                border-radius:5px;
+                margin-top:15px;
+            }
+
+            h2, h3, h4{
+                font-weight: 100;
+            }
+
+            a.navigation{
+                text-decoration: none;
+            }
+
+            a {
+                color:#06568f;
+            }
+
+            a:hover{
+                color: blue;
+            }
+
+            ul.navigation{
+                padding-left: 0;
+            }
+
+            li{
+                padding-top: 5px;
+            }
+
+            ul.navigation,  ul.navigation ul {
+                 list-style-type: none;
+            }
+
+            .cite{
+                font-size:21px; 
+                padding:20px; 
+                color:#7d7c79;
+                font-style: italic;
+            }
+
+        </style>
+    
+    </head>
+    <body>
+
+        <div id="article" style="height:5000px;">
+
+            
+            Large scale refactoring, Application redesign (redesign->rewrite), Reimplementation, Rewrite
+
+            The only person (Lead engineer) creates refactoring plan (so its hollistic)
+
+            continious integration is must
+
+            Refactoring Planner Tools: create refactoring steps/substeps and map them to source code
+            (navigate to class/method by clicking on step and vice versa, show the differences, run unit tests, changes diff)
+            
+             large scale refactoring has many variations, so can't provide a catalogue similar to Fowler's catalogue
+
+            refactoring is a learning process
+            modification of unit tests are often needed during refactoring, 
+            but not for acceptance tests! 
+
+            diagrams of affected modules
+            use module graph generator and class diagrams to assess area of impact
+
+            unfortunately large refactoring can only be partially automated, the biggest work is manual.
+            large refactr - knowledge, thinking and creativity
+
+            two part of refactoring: alter the code, adapt the altered code to the rest of systems
+            Questions to consider before Refactoring
+
+            large refactr -> large impact
+            large refact -> small increments (after each increment all tests are passed, nothing is broken)
+            large refactoring != series of small refactoring (rename method, encapsulate field...)
+            area of impact/assesment of consequences
+            wrong refactoring routes (plan refactoring from start to end) so you will not realize in mid of ref that you picked a wrong direction
+
+            refactoring - in planning process
+            planning: 
+             - include the same amount of refactoring in each iteration
+             - on demand
+             - technical sprint (3 regular iter, 1 technical)
+
+            once team has carried out one half of refactoring, the codecontains portions of the new as well as the old structure
+            : can be unclear for some dev why is it deprecated, why it is unconsistant:
+            plan refactoring with entire team
+
+            plan refactoring steps. it can be planned 100%.
+
+            strategies: all in feature branch and then merge (hard merging), 
+            split in parts and commit regularle to shared code repository 
+            (easy merging, but it will hard to undo such refactoring if new 
+            features are appeared in refactored parts (new features interfere 
+            with refactoring steps), new requeirments will be undone too)
+            one branch: hard merge, easy revert, requires devs to swith context,
+
+            
+
+
+        </div>
+
+    </body>
+</html>

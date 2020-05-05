@@ -613,16 +613,26 @@ builder<span style="color:#b4b4b4;">.</span>RegisterType&lt;<span style="color:#
 
         <a name="solution-3"></a>
         <h3>Solution #3: Facade design pattern</h3>
-
-        <p>Analyzing a long list of constructor parameters of one or multiple 
-        classes, you can spot so called <b>Leaky Abstraction</b> problem.</p> 
-
+        
+        <p>
+            The last but not least refactoring technique is a Facade Design Pattern. 
+            The idea is pretty simple: you should hide a group of related dependencies under the facade.
+            Then, instead of injecting few dependencies into consumer class,
+            you inject only the facade object. This is what it looks like:
+        </p>
+        
         <img src="facade-design-pattern.png"/>
+
+        <p>This may look like moving a problem from one place to another. 
+         In order to catch a real benefits of this approach, we should consider more or less realistic example.</p>
+
 
         <a name="di-patterns"></a>
         <h2>Dependency Injection Patterns</h2>
 
         todo
+
+        ctor is most robust 
 
         <a name="acyclic-dependencies"></a>
         <h2>Acyclic Dependencies</h2>
